@@ -42,11 +42,8 @@ int main(int argc, char ** argv){
 	serve(port);
 }
 
-/* serve: set up the service */
 
-void
-serve(int port)
-{
+void serve(int port){
 	int svc;        /* listening socket providing service */
 	int rqst;       /* socket accepting the request */
 	socklen_t alen;       /* length of address structure */
@@ -54,6 +51,7 @@ serve(int port)
 	struct sockaddr_in client_addr;  /* client's address */
 	int sockoptval = 1;
 	char hostname[128]; /* host name, for debugging */
+	int num;
 
 	gethostname(hostname, 128);
 
@@ -103,7 +101,8 @@ serve(int port)
 
 	/* loop forever - wait for connection requests and perform the service */
 	alen = sizeof(client_addr);     /* length of address */
-
+	char buffer[10241];
+	char *buff;
 	for (;;) {
 		while ((rqst = accept(svc,
 		                (struct sockaddr *)&client_addr, &alen)) < 0) {
@@ -118,6 +117,22 @@ serve(int port)
 
 		printf("received a connection from: %s port %d\n",
 			inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+		if ((num = recv(rqst,buffer,1024,0))==-1){
+			perror("recv");
+			exit(1);
+		}else if(num ==0){
+			printf("Connection closed\n");
+			break;
+		}
+		buffer[num] = '\0';
+		printf("Server: Msg received %s \n", buffer);
+		if((send(rqst,buffer,strlen(buffer),0))==-1){
+			fprintf(stderr,"Failure sending message\n");
+			shutdown(rqst,2);
+			break;
+		}
+		printf("Server:Msg being sent: %s\nNumber of bytes send %d\n",buffer,strlen(buffer));
         	shutdown(rqst, 2);    /* close the connection */
 	}
+	close(svc);
 }

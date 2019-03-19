@@ -6,7 +6,7 @@
 #include <string.h>
 #include <netdb.h>
 #include "port.h"
-
+#define MAXSIZE 1024
 int conn(char *host,int port);
 void disconn(fd);
 int debug = 1;
@@ -16,18 +16,21 @@ int main(int argc, char**argv){
 	extern int optind;
 	int c, err = 0; 
 	char *prompt = 0;
-	int port = SERVICE_PORT;	/* default: whatever is in port.h */
-	char *host = "localhost";	/* default: this host */
-	int fd;				/* file descriptor for socket */
+	int port = SERVICE_PORT;	
+	char *host = "localhost";	
+	int fd;				
+	char buffer[1024];
+	char buff[1024];
+	int num;
 	static char usage[] = 
 	              "usage: %s [-d] [-h serverhost] [-p port]\n";
 
 	while ((c = getopt(argc, argv, "dh:p:")) != -1)
 		switch (c) {
-		case 'h':  /* hostname */
+		case 'h':  
 			host = optarg;
 			break;
-		case 'p':  /* port number */
+		case 'p': 
 			port = atoi(optarg);
 			if (port < 1024 || port > 65535) {
 				fprintf(stderr, "invalid port number: %s\n", optarg);
@@ -38,27 +41,42 @@ int main(int argc, char**argv){
 			err = 1;
 			break;
 		}
-	if (err || (optind < argc)) {	/* error or extra arguments? */
+	if (err || (optind < argc)) {
 		fprintf(stderr, usage, argv[0]);
 		exit(1);
 	}
 
 	printf("connecting to %s, port %d\n", host, port);
 
-	if ((fd = conn(host, port)) < 0)    /* connect */
-		exit(1);   /* something went wrong */
+	if ((fd = conn(host, port)) < 0)    
+		exit(1);   
 
 	/* in a useful program, we would do something here involving reads and writes on fd */
+	while(1){
+		printf("Client: Enter data for server side:\n");
+		fgets(buffer,MAXSIZE-1,stdin);
+		if((send(fd,buffer,strlen(buffer),0)) == -1){
+			fprintf(stderr, "Message faield to send\n");
+			disconn(fd);
+			exit(1);
+		}else{
+			printf("Client: Message being sent: %s\n",buffer);
+			num = recv(fd, buffer, sizeof(buffer),0);
+			if (num <= 0){
+				printf("Error occured\n");
+				break;
+			}
+			buff[num] = '\0';
+			printf("Client:Message received from server: %s\n", buffer);
+		}
+	}
 
-	disconn(fd);    /* disconnect */
+	disconn(fd);   
 	return 0;
 }
 
 
-/* conn: connect to the service running on host:port */
-/* return -1 on failure, file descriptor for the socket on success */
-int
-conn(char *host, int port){
+int conn(char *host, int port){
 	struct hostent *hp;	/* host information */
 	unsigned int alen;	/* address length when we get the port number */
 	struct sockaddr_in myaddr;	/* our address */
@@ -67,22 +85,10 @@ conn(char *host, int port){
 
 	if (debug) printf("conn(host=\"%s\", port=\"%d\")\n", host, port);
 
-	/* get a tcp/ip socket */
-	/* We do this as we did it for the server */
-	/* request the Internet address protocol */
-	/* and a reliable 2-way byte stream */
-
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("cannot create socket");
 		return -1;
 	}
-
-	/* bind to an arbitrary return address */
-	/* because this is the client side, we don't care about the */
-	/* address since no application will connect here  --- */
-	/* INADDR_ANY is the IP address and 0 is the socket */
-	/* htonl converts a long integer (e.g. address) to a network */
-	/* representation (agreed-upon byte ordering */
 
 	memset((char *)&myaddr, 0, sizeof(myaddr));
 	myaddr.sin_family = AF_INET;
@@ -136,8 +142,7 @@ conn(char *host, int port){
 /* disconnect from the service */
 /* lame: we can just as easily do a shutdown() or close() ourselves */
 
-void
-disconn(int fd){
+void disconn(int fd){
 	if (debug) printf("disconn(%d)\n", fd);
 	shutdown(fd, 2);    /* 2 means future sends & receives are disallowed */
 }
