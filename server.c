@@ -28,7 +28,7 @@ int main(){
 		exit(1);
 	}
 	printf("[+]Server Socket is created.\n");
-
+	//initialize
 	memset(&serverAddr, '\0', sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(PORT);
@@ -54,17 +54,17 @@ int main(){
 			exit(1);
 		}
 		printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
-
+		//for multiple clients to access the server we need to use fork
 		if((childpid = fork()) == 0){
 			close(sockfd);
 			int valid;
 
 			while(1){
-				valid = read(newSocket, buffer, 1024);
-				if(valid == 0){
+				valid = read(newSocket, buffer, 1024);//read in message
+				if(valid == 0){//check if the message was exit
 					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 					break;
-				}else{
+				}else{//get the message, send back a response
 					printf("Client: %s\nResopnse:", buffer);
 					bzero(buffer, sizeof(buffer));
 					n = 0;

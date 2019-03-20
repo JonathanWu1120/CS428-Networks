@@ -34,7 +34,7 @@ int main(){
 	}
 	printf("[+]Connected to Server.\n");
 	int n;
-	while(1){
+	while(1){//loop to send messages to server until exit is received from the server
 		bzero(buffer, sizeof(buffer));
 		printf("Client:");
 		n = 0;	
