@@ -33,23 +33,29 @@ int main(){
 		exit(1);
 	}
 	printf("[+]Connected to Server.\n");
-
+	int n;
 	while(1){
-		printf("Client: \t");
-		scanf("%s", &buffer[0]);
-		send(clientSocket, buffer, strlen(buffer), 0);
-
-		if(strcmp(buffer, ":exit") == 0){
+		bzero(buffer, sizeof(buffer));
+		printf("Client:");
+		n = 0;	
+		while((buffer[n++] = getchar()) != '\n')
+			;
+		write(clientSocket, buffer, sizeof(buffer));
+		bzero(buffer, sizeof(buffer));
+		read(clientSocket, buffer, sizeof(buffer));
+		printf("From server: %s",buffer);
+		if(strncmp(buffer, "exit",4) == 0){
 			close(clientSocket);
 			printf("[-]Disconnected from server.\n");
 			exit(1);
 		}
-
+/*
 		if(recv(clientSocket, buffer, 1024, 0) < 0){
 			printf("[-]Error in receiving data.\n");
 		}else{
 			printf("Server: \t%s\n", buffer);
 		}
+		*/
 	}
 
 	return 0;
