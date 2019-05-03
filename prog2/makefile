@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS = -g
-LIBS = -lsocket -lnsl
+#LIBS = -lsocket -lnsl
 
 all: client server
 

@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stdio.h>
 
 #define PORT_NUMBER 5000
 #define SERVER_ADDR "192.168.1.7"
@@ -27,7 +28,7 @@ int main(int argc, char **argv){
 
 	client_socket = socket(AF_INET, SOCK_STREAM,0);
 	if(client_socket == -1){
-		fprintf(stderr, "ERROR CREATING SOCKET %s" strerror(errno));
+		fprintf(stderr, "ERROR CREATING SOCKET %s", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	if(connect(client_socket, (struct sockaddr *)&remote_addr, sizeof(struct sockaddr))==-1){
@@ -46,7 +47,7 @@ int main(int argc, char **argv){
 	while((remain_data > 0) && ((len = recv(client_socket, buffer, BUFSIZ, 0)) > 0)){
 		fwrite(buffer, sizeof(char), len, received_file);
 		remain_data -= len;
-		printf("Received %d bytes and %d remaining\n",len, remain_data);
+		printf("Received %ld bytes and %d remaining\n",len, remain_data);
 	}
 	fclose(received_file);
 	close(client_socket);
