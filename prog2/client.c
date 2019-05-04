@@ -11,7 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include "utils.h"
+#include "helper.h"
 
 int main (int argc, char **argv) {
     struct addrinfo hints, *server_info, *my_info;
