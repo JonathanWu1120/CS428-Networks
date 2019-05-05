@@ -69,6 +69,7 @@ int main (int argc, char **argv) {
 
             // Send ACK packet
             int bytesSent = sendto(socketFD, byteArrayPacket, currentPacketTotalSize, 0, (struct sockaddr *)&their_addr, sizeof(struct sockaddr_storage));
+	    printf("Packet sent, size of %d\n",ackPacket.size);
 
             free (byteArrayPacket);
             fclose(outputFile);
