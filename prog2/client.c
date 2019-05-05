@@ -19,9 +19,8 @@ int main (int argc, char **argv) {
     const char *inputFileName = argv[4];
     FILE *inputFile;
 
-    // Ensure that the correct number of command line arguments were provided
     if (argc != 5) {
-        printf("Usage: deliver <server address> <server port number> <client listen port> <file name>\n");
+        printf("Correct format: ./client <server address> <server port number> <client listen port> <file name>\n");
         return 1;
     }
 
@@ -29,24 +28,18 @@ int main (int argc, char **argv) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
-
-    // Get IP address of the server
+    //ip address info
     getaddrinfo(argv[1], argv[2], &hints, &server_info);
-
-    // Get client's IP address
     getaddrinfo(NULL, argv[3], &hints, &my_info);
 
     if (server_info != NULL) {
 
-        // Create socket
         socketFD = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+	printf("Socket created\n");
 
         struct timeval tv;
-
-        // 1-second timeout on recv calls with socket
+	// 1 second timeout
         tv.tv_sec = 1;
-
-        // Not initialzingthis can cause strange errors
         tv.tv_usec = 0;
         setsockopt(socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
 
@@ -56,7 +49,7 @@ int main (int argc, char **argv) {
 
         struct stat inputFileInfo;
 
-        // Get filesize to calculate total number of fragments and total number of fragment digits
+	//file size calculations
         stat(inputFileName, &inputFileInfo);
 
         unsigned int total_frag = ((inputFileInfo.st_size) / MAX_DATA_SIZE) + 1;
@@ -94,14 +87,16 @@ int main (int argc, char **argv) {
             Packet ackPacket;
 
             do {
-                //Transmit the packet that was just created
+		//Sent packet
                 int bytesSent = sendto(socketFD, byteArrayPacket, currentPacketTotalSize, 0, server_info->ai_addr, sizeof(struct sockaddr_storage));
+		printf("Packet sent\n");
 
                 struct sockaddr_storage dummyVar;
                 int dummyVar_len = sizeof(dummyVar);
 
-                // Wait 1 second for ACK packet from server
+                // Wait 1 second for ACK 
                 int bytesReceived = recvfrom(socketFD, buf, BUFLEN, 0, (struct sockaddr *) &dummyVar, &dummyVar_len);
+		printf("ACK packet received\n");
 
                 if (bytesReceived != -1) {
                     ackReceived = 1;
@@ -109,14 +104,12 @@ int main (int argc, char **argv) {
                     extractPacket(&ackPacket, buf, bytesReceived);
                     current_frag_no = ackPacket.frag_no;
                 }
-		printf("Packet received\n");
 
             } while(ackReceived == 0 && current_frag_no <= total_frag);
 
             free(byteArrayPacket);
         }
 
-        //Free the server_info and my_info linked lists from getaddrinfo calls
         freeaddrinfo(server_info);
         freeaddrinfo(my_info);
     }

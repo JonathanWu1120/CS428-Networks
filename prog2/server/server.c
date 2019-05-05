@@ -22,7 +22,7 @@ int main (int argc, char **argv) {
     FILE * outputFile;
 
     if (argc != 2) {
-        printf ("Usage: server <UDP listen port> ");
+        printf ("Correct format is: ./server <listen port> ");
         return 1;
     }
 
@@ -34,18 +34,21 @@ int main (int argc, char **argv) {
     getaddrinfo(NULL, argv[1], &hints, &server_info);
 
     if (server_info != NULL) {
+	//Create socket
         socketFD = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
         bind(socketFD, server_info->ai_addr, server_info->ai_addrlen);
 
         freeaddrinfo(server_info);
 
         while (1) {
+	    //Get packet
             int bytesReceived = recvfrom(socketFD, buf, BUFLEN, 0, (struct sockaddr *)&their_addr, &their_addrlen);
 
             Packet incomingPacket;
             memset(&incomingPacket,0, sizeof(Packet));
 
             extractPacket(&incomingPacket, buf, bytesReceived);
+	    printf("Packet received\n");
 
             outputFile = fopen(incomingPacket.filename, "ab");
 
@@ -57,7 +60,7 @@ int main (int argc, char **argv) {
             char *byteArrayPacket;
             Packet ackPacket;
 
-            // Set up the ACK packet with all data
+            // Set up the ACK packet 
             ackPacket.total_frag = incomingPacket.total_frag;
             ackPacket.frag_no = incomingPacket.frag_no + 1;
             ackPacket.size = ACK_CONTENT_LEN;
@@ -69,7 +72,7 @@ int main (int argc, char **argv) {
 
             // Send ACK packet
             int bytesSent = sendto(socketFD, byteArrayPacket, currentPacketTotalSize, 0, (struct sockaddr *)&their_addr, sizeof(struct sockaddr_storage));
-	    printf("Packet sent, size of %d\n",ackPacket.size);
+	    printf("ACK Packet sent\n");
 
             free (byteArrayPacket);
             fclose(outputFile);

@@ -57,10 +57,7 @@ unsigned int createPacket (char **byteArray, const Packet* packet) {
 
     snprintf(*byteArray, maxPacketSizeNoMsg + 1, "%d:%d:%d:%s:", packet->total_frag, packet->frag_no, packet->size, packet->filename);
 
-    //After processing the packet header data, you need to copy the actual file data byte by byte since file might contain null-terminating characters
     char *message = *byteArray + getNumDigits(packet->total_frag) + getNumDigits(packet->frag_no) + getNumDigits(packet->size) + strlen(packet->filename) + NUM_COLONS;
-
-    // message points to the position after the fourth colon in the byteArray at this point
 
     unsigned int j;
     for (j = 0; j < packet->size; j++) {
