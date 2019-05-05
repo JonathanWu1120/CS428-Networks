@@ -109,6 +109,7 @@ int main (int argc, char **argv) {
                     extractPacket(&ackPacket, buf, bytesReceived);
                     current_frag_no = ackPacket.frag_no;
                 }
+		printf("Packet received\n");
 
             } while(ackReceived == 0 && current_frag_no <= total_frag);
 
